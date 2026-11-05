@@ -1,7 +1,7 @@
 """Auth dependencies for FastAPI."""
 
-from collections.abc import Callable
-from typing import Annotated
+from collections.abc import Callable, Coroutine
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -51,7 +51,7 @@ async def get_current_user(
     return user
 
 
-async def require_role(role: str) -> Callable[[User], User]:
+async def require_role(role: str) -> Callable[[User], "Coroutine[Any, Any, User]"]:
     """Dependency factory to require specific role."""
 
     async def _require_role(user: Annotated[User, Depends(get_current_user)]) -> User:

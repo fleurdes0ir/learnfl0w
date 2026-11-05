@@ -92,7 +92,7 @@ class AuthService:
         result = await self.session.execute(
             select(RefreshToken).where(RefreshToken.token_hash == token_hash)
         )
-        rt = result.scalar_one_or_none()
+        rt = result.scalars().one_or_none()
 
         if not rt or rt.revoked_at or rt.expires_at < datetime.now(UTC):
             raise ValueError("Invalid or expired refresh token")
@@ -119,12 +119,12 @@ class AuthService:
 
         # Get user
         result = await self.session.execute(select(User).where(User.id == rt.user_id))
-        user = result.scalar_one_or_none()
-        if not user or not user.is_active:
+        user = result.scalars().one_or_none()
+        if not user or not user.is_active:  # type: ignore
             raise ValueError("User not found or inactive")
 
         # Create new tokens
-        access_token = create_access_token(str(user.id), user.role)
+        access_token = create_access_token(str(user.id), user.role)  # type: ignore
         new_refresh_token, new_token_hash = create_refresh_token(str(user.id))
 
         new_rt = RefreshToken(
