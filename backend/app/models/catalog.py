@@ -3,6 +3,7 @@
 import uuid
 from datetime import UTC, date, datetime
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     Boolean,
     Date,
@@ -11,11 +12,9 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
-from pgvector.sqlalchemy import Vector
 
 from app.db.base import Base
 
@@ -92,7 +91,9 @@ class Certification(Base):
     cost_type: Mapped[str] = mapped_column(String(50), nullable=False)  # free/paid/freemium
     url: Mapped[str] = mapped_column(Text, nullable=False)
     language: Mapped[str] = mapped_column(String(10), nullable=False, default="en")
-    career_path_ids: Mapped[list[uuid.UUID]] = mapped_column(ARRAY(UUID(as_uuid=True)), nullable=False, default=list)
+    career_path_ids: Mapped[list[uuid.UUID]] = mapped_column(
+        ARRAY(UUID(as_uuid=True)), nullable=False, default=list
+    )
     topic_tags: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False, default=list)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     last_verified_at: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -123,7 +124,9 @@ class LearningMaterial(Base):
     url: Mapped[str] = mapped_column(Text, nullable=False)
     language: Mapped[str] = mapped_column(String(10), nullable=False, default="en")
     duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    career_path_ids: Mapped[list[uuid.UUID]] = mapped_column(ARRAY(UUID(as_uuid=True)), nullable=False, default=list)
+    career_path_ids: Mapped[list[uuid.UUID]] = mapped_column(
+        ARRAY(UUID(as_uuid=True)), nullable=False, default=list
+    )
     topic_tags: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False, default=list)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     last_verified_at: Mapped[date | None] = mapped_column(Date, nullable=True)

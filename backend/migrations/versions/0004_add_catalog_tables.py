@@ -6,9 +6,8 @@ Revises: 0003
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
-
 from pgvector.sqlalchemy import Vector
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 
 revision = "0004"
 down_revision = "0003"
@@ -96,7 +95,9 @@ def upgrade() -> None:
         sa.Column("cost_type", sa.String(50), nullable=False),
         sa.Column("url", sa.Text(), nullable=False),
         sa.Column("language", sa.String(10), nullable=False, server_default="en"),
-        sa.Column("career_path_ids", ARRAY(UUID(as_uuid=True)), nullable=False, server_default="{}"),
+        sa.Column(
+            "career_path_ids", ARRAY(UUID(as_uuid=True)), nullable=False, server_default="{}"
+        ),
         sa.Column("topic_tags", ARRAY(sa.String()), nullable=False, server_default="{}"),
         sa.Column("description", sa.Text(), nullable=False),
         sa.Column("last_verified_at", sa.Date(), nullable=True),
@@ -132,7 +133,9 @@ def upgrade() -> None:
         sa.Column("url", sa.Text(), nullable=False),
         sa.Column("language", sa.String(10), nullable=False, server_default="en"),
         sa.Column("duration_minutes", sa.Integer(), nullable=True),
-        sa.Column("career_path_ids", ARRAY(UUID(as_uuid=True)), nullable=False, server_default="{}"),
+        sa.Column(
+            "career_path_ids", ARRAY(UUID(as_uuid=True)), nullable=False, server_default="{}"
+        ),
         sa.Column("topic_tags", ARRAY(sa.String()), nullable=False, server_default="{}"),
         sa.Column("description", sa.Text(), nullable=False),
         sa.Column("last_verified_at", sa.Date(), nullable=True),
