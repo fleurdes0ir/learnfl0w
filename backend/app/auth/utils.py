@@ -62,7 +62,7 @@ def create_refresh_token(user_id: str) -> tuple[str, str]:
     return token, token_hash
 
 
-def verify_token(token: str, token_type: str = "access") -> dict | None:  # noqa: S107
+def verify_token(token: str, token_type: str = "access") -> dict[str, object] | None:  # noqa: S107
     """Verify and decode token. Return payload on success, None on failure."""
     settings = get_settings()
     try:
