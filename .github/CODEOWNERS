@@ -1,0 +1,9 @@
+# Ganti dengan username GitHub anggota tim, lalu hapus tanda komentar.
+# Format: <pola> <@username>
+#
+# *                 @fleurdes0ir @username-bastian
+# /backend/         @fleurdes0ir
+# /infra/           @fleurdes0ir
+# /.github/         @fleurdes0ir
+# /frontend/        @username-bastian
+# /docs/            @fleurdes0ir @username-bastian

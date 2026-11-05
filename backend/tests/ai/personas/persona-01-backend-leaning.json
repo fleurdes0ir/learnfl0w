@@ -1,0 +1,23 @@
+{
+  "id": "persona-01",
+  "description": "Semester 5, suka logika dan basis data, ingin magang sebagai backend",
+  "profile": {
+    "semester": 5,
+    "interests": ["membangun API", "basis data"],
+    "current_skills": ["Python", "SQL"],
+    "hours_per_week": 10,
+    "internship_target": "Semester 6",
+    "budget_pref": "free"
+  },
+  "transcript": [
+    { "course_code": "MK-ALGO", "grade": "A" },
+    { "course_code": "MK-BD", "grade": "AB" },
+    { "course_code": "MK-PBO", "grade": "B" },
+    { "course_code": "MK-RPL", "grade": "A" }
+  ],
+  "expected": {
+    "candidate_paths_include": ["CP-01"],
+    "must_not_recommend_as_new": ["MK-ALGO", "MK-BD", "MK-PBO", "MK-RPL"],
+    "budget": "free"
+  }
+}

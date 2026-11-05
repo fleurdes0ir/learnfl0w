@@ -1,0 +1,85 @@
+name: learnfl0w
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-learnfl0w}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-learnfl0w}
+      POSTGRES_DB: ${POSTGRES_DB:-learnfl0w}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./infra/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-learnfl0w} -d $${POSTGRES_DB:-learnfl0w}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  langflow:
+    build:
+      context: ./langflow
+      args:
+        LANGFLOW_VERSION: ${LANGFLOW_VERSION:-1.12.0}
+    environment:
+      LANGFLOW_DATABASE_URL: postgresql://${POSTGRES_USER:-learnfl0w}:${POSTGRES_PASSWORD:-learnfl0w}@db:5432/langflow
+      LANGFLOW_AUTO_LOGIN: "false"
+      LANGFLOW_SUPERUSER: ${LANGFLOW_SUPERUSER:-admin}
+      LANGFLOW_SUPERUSER_PASSWORD: ${LANGFLOW_SUPERUSER_PASSWORD:-ganti-password-kuat}
+      LANGFLOW_SECRET_KEY: ${LANGFLOW_SECRET_KEY:-ganti-dengan-string-acak-tetap}
+      LANGFLOW_VARIABLES_TO_GET_FROM_ENVIRONMENT: ROUTER_BASE_URL,ROUTER_API_KEY,INTERNAL_TOOL_TOKEN,VERTEX_PROJECT,VERTEX_LOCATION
+      ROUTER_BASE_URL: ${ROUTER_BASE_URL:-}
+      ROUTER_API_KEY: ${ROUTER_API_KEY:-}
+      INTERNAL_TOOL_TOKEN: ${INTERNAL_TOOL_TOKEN:-ganti-token-internal-acak}
+      VERTEX_PROJECT: ${VERTEX_PROJECT:-}
+      VERTEX_LOCATION: ${VERTEX_LOCATION:-asia-southeast2}
+      # Varian Vertex di lokal: pasang kredensial layanan (jangan commit), mis.:
+      # GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-sa.json
+    # volumes:
+    #   - ./.secrets/gcp-sa.json:/secrets/gcp-sa.json:ro
+    ports:
+      - "7860:7860"   # UI Langflow hanya untuk penyusunan flow di lokal
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7860/health_check')"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-learnfl0w}:${POSTGRES_PASSWORD:-learnfl0w}@db:5432/${POSTGRES_DB:-learnfl0w}
+      LANGFLOW_BASE_URL: http://langflow:7860
+      PORT: "8080"
+      SEED_DIR: /app/data/seed
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      langflow:
+        condition: service_started
+    volumes:
+      - ./data/seed:/app/data/seed:ro
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
+    environment:
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

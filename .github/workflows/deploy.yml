@@ -1,0 +1,128 @@
+name: deploy
+
+# Deployment cloud ditempatkan DI AKHIR (jendela 2026-11-28 sampai 2026-12-03).
+# Sebelum itu workflow ini tidak berjalan otomatis. Jalankan manual (workflow_dispatch)
+# dari cabang `main`, atau dengan menandai `main` dengan tag `v*`.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: deploy-cloud
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: ${{ vars.GCP_REGION }}
+  REGISTRY: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.AR_REPOSITORY }}
+  BACKEND_SERVICE: learnfl0w-backend
+  FRONTEND_SERVICE: learnfl0w-frontend
+  LANGFLOW_SERVICE: learnfl0w-langflow
+  MIN_INSTANCES: ${{ vars.MIN_INSTANCES || '0' }}
+
+jobs:
+  deploy:
+    # Hanya dari main atau tag rilis
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: cloud
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      - name: Build and push images
+        run: |
+          docker build -t "$REGISTRY/backend:${GITHUB_SHA}" backend
+          docker build -t "$REGISTRY/langflow:${GITHUB_SHA}" langflow
+          docker build --build-arg NEXT_PUBLIC_API_BASE_URL="${{ vars.BACKEND_URL }}" \
+            -t "$REGISTRY/frontend:${GITHUB_SHA}" frontend
+          docker push "$REGISTRY/backend:${GITHUB_SHA}"
+          docker push "$REGISTRY/langflow:${GITHUB_SHA}"
+          docker push "$REGISTRY/frontend:${GITHUB_SHA}"
+
+      - name: Remember previous revisions (for rollback)
+        id: prev
+        run: |
+          get() { gcloud run services describe "$1" --region "$REGION" \
+            --format='value(status.latestReadyRevisionName)' 2>/dev/null || true; }
+          echo "backend=$(get "$BACKEND_SERVICE")" >> "$GITHUB_OUTPUT"
+          echo "langflow=$(get "$LANGFLOW_SERVICE")" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Langflow (private service)
+        env:
+          IMAGE: ${{ env.REGISTRY }}/langflow:${{ github.sha }}
+          CLOUDSQL_INSTANCE: ${{ vars.CLOUDSQL_INSTANCE }}
+          LANGFLOW_MIN_INSTANCES: ${{ env.MIN_INSTANCES }}
+        run: |
+          # Template: infra/cloud-run/langflow.service.yaml (variabel dari environment)
+          envsubst < infra/cloud-run/langflow.service.yaml | \
+            gcloud run services replace - --region "$REGION"
+          gcloud run services add-iam-policy-binding "$LANGFLOW_SERVICE" --region "$REGION" \
+            --member "serviceAccount:sa-backend@${PROJECT_ID}.iam.gserviceaccount.com" \
+            --role roles/run.invoker
+
+      - name: Deploy backend
+        run: |
+          LANGFLOW_URL=$(gcloud run services describe "$LANGFLOW_SERVICE" --region "$REGION" --format='value(status.url)')
+          gcloud run deploy "$BACKEND_SERVICE" \
+            --image "$REGISTRY/backend:${GITHUB_SHA}" \
+            --region "$REGION" \
+            --service-account "sa-backend@${PROJECT_ID}.iam.gserviceaccount.com" \
+            --add-cloudsql-instances "${{ vars.CLOUDSQL_INSTANCE }}" \
+            --set-secrets "DATABASE_URL=database-url:latest,JWT_SECRET=jwt-secret:latest,LANGFLOW_API_KEY=langflow-api-key:latest,INTERNAL_TOOL_TOKEN=internal-tool-token:latest,ADMIN_EMAILS=admin-emails:latest" \
+            --set-env-vars "APP_ENV=cloud,CORS_ORIGINS=${{ vars.FRONTEND_URL }},LANGFLOW_BASE_URL=${LANGFLOW_URL},LANGFLOW_USE_ID_TOKEN=true,VERTEX_PROJECT=${PROJECT_ID},VERTEX_LOCATION=${REGION},EMBEDDING_PROVIDER=vertex,LLM_PROVIDER=${{ vars.LLM_PROVIDER || 'router' }},LLM_FALLBACK_PROVIDER=vertex" \
+            --min-instances "$MIN_INSTANCES" \
+            --max-instances 3 \
+            --memory 1Gi \
+            --concurrency 20 \
+            --timeout 300 \
+            --no-cpu-throttling \
+            --allow-unauthenticated
+
+      - name: Smoke test backend
+        id: smoke
+        run: |
+          URL=$(gcloud run services describe "$BACKEND_SERVICE" --region "$REGION" --format='value(status.url)')
+          for i in $(seq 1 18); do
+            if curl -fsS "$URL/healthz" > /dev/null; then echo "healthz ok"; curl -fsS "$URL/healthz/llm" || true; exit 0; fi
+            echo "attempt $i failed; retrying"; sleep 10
+          done
+          echo "smoke test failed"; exit 1
+
+      - name: Roll back on failed smoke test
+        if: failure() && steps.smoke.outcome == 'failure'
+        run: |
+          if [ -n "${{ steps.prev.outputs.backend }}" ]; then
+            gcloud run services update-traffic "$BACKEND_SERVICE" --region "$REGION" \
+              --to-revisions "${{ steps.prev.outputs.backend }}=100"
+          fi
+          if [ -n "${{ steps.prev.outputs.langflow }}" ]; then
+            gcloud run services update-traffic "$LANGFLOW_SERVICE" --region "$REGION" \
+              --to-revisions "${{ steps.prev.outputs.langflow }}=100"
+          fi
+
+      - name: Deploy frontend
+        run: |
+          gcloud run deploy "$FRONTEND_SERVICE" \
+            --image "$REGISTRY/frontend:${GITHUB_SHA}" \
+            --region "$REGION" \
+            --service-account "sa-frontend@${PROJECT_ID}.iam.gserviceaccount.com" \
+            --min-instances "$MIN_INSTANCES" \
+            --max-instances 3 \
+            --memory 512Mi \
+            --allow-unauthenticated

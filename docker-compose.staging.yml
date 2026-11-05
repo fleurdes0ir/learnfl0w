@@ -1,0 +1,23 @@
+# Staging lokal: meniru cloud (image yang sama, batas sumber daya, tanpa mode pengembangan).
+# Pakai bersama file utama:
+#   docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d --build
+# atau: make staging-up   (cabang `dev`)
+name: learnfl0w-staging
+
+services:
+  db:
+    restart: unless-stopped
+  langflow:
+    restart: unless-stopped
+    mem_limit: 2g
+    environment:
+      LANGFLOW_AUTO_LOGIN: "false"
+  backend:
+    restart: unless-stopped
+    mem_limit: 1g
+    environment:
+      APP_ENV: staging
+      LOG_LEVEL: INFO
+  frontend:
+    restart: unless-stopped
+    mem_limit: 512m

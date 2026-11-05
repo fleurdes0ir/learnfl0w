@@ -1,0 +1,85 @@
+# Template layanan Langflow (privat) untuk `gcloud run services replace`.
+# Variabel ${...} diisi oleh envsubst pada deploy.yml. Diukur dan divalidasi pada jendela deployment (M5).
+# Akses: tanpa invoker publik; hanya sa-backend (roles/run.invoker) yang diberi izin.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: learnfl0w-langflow
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "${LANGFLOW_MIN_INSTANCES}"
+        autoscaling.knative.dev/maxScale: "2"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/cloudsql-instances: "${CLOUDSQL_INSTANCE}"
+    spec:
+      serviceAccountName: sa-langflow@${PROJECT_ID}.iam.gserviceaccount.com
+      containerConcurrency: 10
+      timeoutSeconds: 300
+      containers:
+        - name: langflow
+          image: ${IMAGE}
+          ports:
+            - containerPort: 7860
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          env:
+            - name: LANGFLOW_AUTO_LOGIN
+              value: "false"
+            - name: LANGFLOW_PORT
+              value: "7860"
+            - name: LANGFLOW_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: langflow-database-url
+            - name: LANGFLOW_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: langflow-secret-key
+            - name: LANGFLOW_SUPERUSER
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: langflow-superuser
+            - name: LANGFLOW_SUPERUSER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: langflow-superuser-password
+            - name: INTERNAL_TOOL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: internal-tool-token
+            - name: ROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: router-api-key
+            - name: ROUTER_BASE_URL
+              value: "${ROUTER_BASE_URL}"
+            - name: VERTEX_PROJECT
+              value: "${PROJECT_ID}"
+            - name: VERTEX_LOCATION
+              value: "${REGION}"
+          startupProbe:
+            httpGet:
+              path: /health_check
+              port: 7860
+            periodSeconds: 10
+            failureThreshold: 30
+        # Sidecar Tailscale (userspace networking) untuk menjangkau 9router.
+        # TEMPLATE, PERLU DIVALIDASI pada M5: image, env, dan cara aplikasi memakai proxy lokal.
+        # - name: tailscale
+        #   image: tailscale/tailscale:<versi-dipin>
+        #   env:
+        #     - name: TS_USERSPACE_NETWORKING
+        #       value: "true"
+        #     - name: TS_AUTHKEY
+        #       valueFrom:
+        #         secretKeyRef: { key: latest, name: tailscale-auth-key }

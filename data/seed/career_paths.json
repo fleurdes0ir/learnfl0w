@@ -1,0 +1,310 @@
+[
+  {
+    "code": "CP-01",
+    "name": "Backend Developer",
+    "description": "Membangun logika sisi server, API, dan basis data untuk aplikasi.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi pemrograman dan struktur data"
+      },
+      {
+        "order": 2,
+        "title": "Basis data dan SQL"
+      },
+      {
+        "order": 3,
+        "title": "Membangun REST API"
+      },
+      {
+        "order": 4,
+        "title": "Keamanan dan pengujian"
+      },
+      {
+        "order": 5,
+        "title": "Deployment dasar dan portofolio"
+      }
+    ],
+    "is_active": true
+  },
+  {
+    "code": "CP-02",
+    "name": "Frontend / Web Developer",
+    "description": "Membangun antarmuka web yang interaktif, responsif, dan mudah diakses.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi web (HTML, CSS, JavaScript)"
+      },
+      {
+        "order": 2,
+        "title": "Framework dan komponen UI"
+      },
+      {
+        "order": 3,
+        "title": "Konsumsi API dan pengelolaan state"
+      },
+      {
+        "order": 4,
+        "title": "Aksesibilitas, performa, dan pengujian"
+      },
+      {
+        "order": 5,
+        "title": "Portofolio dan deployment"
+      }
+    ],
+    "is_active": true
+  },
+  {
+    "code": "CP-03",
+    "name": "Data Analyst",
+    "description": "Mengolah dan menganalisis data untuk mendukung keputusan bisnis.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi statistika dan spreadsheet"
+      },
+      {
+        "order": 2,
+        "title": "SQL dan pengolahan data"
+      },
+      {
+        "order": 3,
+        "title": "Visualisasi dan dashboard"
+      },
+      {
+        "order": 4,
+        "title": "Analisis dan penyampaian temuan"
+      },
+      {
+        "order": 5,
+        "title": "Portofolio analisis"
+      }
+    ],
+    "is_active": true
+  },
+  {
+    "code": "CP-04",
+    "name": "AI / Machine Learning Engineer",
+    "description": "Membangun dan menerapkan model machine learning dan sistem AI.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi matematika dan pemrograman"
+      },
+      {
+        "order": 2,
+        "title": "Machine learning dasar"
+      },
+      {
+        "order": 3,
+        "title": "Deep learning dan evaluasi model"
+      },
+      {
+        "order": 4,
+        "title": "Deployment model dan MLOps dasar"
+      },
+      {
+        "order": 5,
+        "title": "Proyek dan portofolio"
+      }
+    ],
+    "is_active": true
+  },
+  {
+    "code": "CP-05",
+    "name": "Cloud & DevOps Engineer",
+    "description": "Membangun, mengotomasi, dan menjaga infrastruktur dan pengiriman perangkat lunak di cloud.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi Linux dan jaringan"
+      },
+      {
+        "order": 2,
+        "title": "Container dan Docker"
+      },
+      {
+        "order": 3,
+        "title": "CI/CD dan otomasi"
+      },
+      {
+        "order": 4,
+        "title": "Layanan cloud dan serverless"
+      },
+      {
+        "order": 5,
+        "title": "Observabilitas dan keandalan"
+      }
+    ],
+    "is_active": true
+  },
+  {
+    "code": "CP-06",
+    "name": "Network Engineer",
+    "description": "Merancang, mengonfigurasi, dan memelihara infrastruktur jaringan.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi jaringan dan komunikasi data"
+      },
+      {
+        "order": 2,
+        "title": "Routing dan switching"
+      },
+      {
+        "order": 3,
+        "title": "Layanan dan keamanan jaringan"
+      },
+      {
+        "order": 4,
+        "title": "Otomasi dan monitoring"
+      },
+      {
+        "order": 5,
+        "title": "Sertifikasi dan portofolio lab"
+      }
+    ],
+    "is_active": true
+  },
+  {
+    "code": "CP-07",
+    "name": "Cybersecurity Analyst",
+    "description": "Melindungi sistem dan data dari ancaman siber serta menangani insiden.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi jaringan dan sistem operasi"
+      },
+      {
+        "order": 2,
+        "title": "Dasar keamanan dan kriptografi"
+      },
+      {
+        "order": 3,
+        "title": "Keamanan aplikasi dan web"
+      },
+      {
+        "order": 4,
+        "title": "Deteksi, respons insiden, dan lab"
+      },
+      {
+        "order": 5,
+        "title": "Sertifikasi dan portofolio"
+      }
+    ],
+    "is_active": true
+  },
+  {
+    "code": "CP-08",
+    "name": "IoT Engineer",
+    "description": "Membangun solusi perangkat terhubung dari sensor hingga platform data.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi elektronika dan arsitektur komputer"
+      },
+      {
+        "order": 2,
+        "title": "Mikrokontroler dan sensor"
+      },
+      {
+        "order": 3,
+        "title": "Protokol komunikasi IoT"
+      },
+      {
+        "order": 4,
+        "title": "Platform data dan cloud IoT"
+      },
+      {
+        "order": 5,
+        "title": "Proyek terpadu dan portofolio"
+      }
+    ],
+    "is_active": true
+  },
+  {
+    "code": "CP-09",
+    "name": "UI/UX & Multimedia Designer",
+    "description": "Merancang pengalaman pengguna dan konten visual serta multimedia.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi desain visual"
+      },
+      {
+        "order": 2,
+        "title": "Riset pengguna dan wireframe"
+      },
+      {
+        "order": 3,
+        "title": "Prototyping dan sistem desain"
+      },
+      {
+        "order": 4,
+        "title": "Multimedia dan motion"
+      },
+      {
+        "order": 5,
+        "title": "Portofolio dan studi kasus"
+      }
+    ],
+    "is_active": true
+  },
+  {
+    "code": "CP-10",
+    "name": "QA / Software Tester",
+    "description": "Menjamin kualitas perangkat lunak lewat pengujian manual dan otomatis.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi pengujian perangkat lunak"
+      },
+      {
+        "order": 2,
+        "title": "Test case dan teknik pengujian"
+      },
+      {
+        "order": 3,
+        "title": "Otomasi pengujian"
+      },
+      {
+        "order": 4,
+        "title": "Pengujian API dan performa"
+      },
+      {
+        "order": 5,
+        "title": "Portofolio dan sertifikasi"
+      }
+    ],
+    "is_active": true
+  },
+  {
+    "code": "CP-11",
+    "name": "Fintech / Banking IT Analyst",
+    "description": "Menganalisis kebutuhan dan sistem pada layanan keuangan dan perbankan digital.",
+    "template_stages": [
+      {
+        "order": 1,
+        "title": "Fondasi proses bisnis dan sistem perbankan"
+      },
+      {
+        "order": 2,
+        "title": "Analisis kebutuhan dan dokumentasi"
+      },
+      {
+        "order": 3,
+        "title": "Data dan SQL untuk keuangan"
+      },
+      {
+        "order": 4,
+        "title": "Keamanan dan kepatuhan dasar"
+      },
+      {
+        "order": 5,
+        "title": "Studi kasus fintech dan portofolio"
+      }
+    ],
+    "is_active": true
+  }
+]

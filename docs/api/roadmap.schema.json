@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learnfl0w.example/schemas/roadmap.schema.json",
+  "title": "Roadmap",
+  "description": "Roadmap karir hasil konsultasi AI. Seluruh ref_id harus ada di katalog dan seluruh tautan berasal dari katalog.",
+  "type": "object",
+  "required": ["schema_version", "career_path_code", "summary", "assumptions", "stages", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "career_path_code": { "type": "string", "pattern": "^CP-[0-9]{2}$" },
+    "summary": { "type": "string", "maxLength": 600 },
+    "assumptions": {
+      "type": "object",
+      "required": ["hours_per_week", "internship_target", "budget"],
+      "additionalProperties": false,
+      "properties": {
+        "hours_per_week": { "type": "integer", "minimum": 1, "maximum": 80 },
+        "internship_target": { "type": "string" },
+        "budget": { "enum": ["free", "paid_ok"] }
+      }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "order", "estimated_weeks"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^S[0-9]+$" },
+          "title": { "type": "string", "maxLength": 120 },
+          "order": { "type": "integer", "minimum": 1 },
+          "estimated_weeks": { "type": "integer", "minimum": 1, "maximum": 52 }
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "stage_id", "label"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^N[0-9]+$" },
+          "type": { "enum": ["course", "material", "certification"] },
+          "stage_id": { "type": "string", "pattern": "^S[0-9]+$" },
+          "ref_id": { "type": "string", "description": "Kode katalog: MK-*, MAT-*, CERT-*" },
+          "label": { "type": "string", "maxLength": 160 },
+          "reason": { "type": "string", "maxLength": 300 },
+          "status": { "enum": ["completed", "in_progress", "not_taken", "not_applicable"], "description": "Hanya untuk node course" },
+          "grade": { "type": ["string", "null"], "description": "Hanya untuk node course yang sudah ditempuh" },
+          "cost_type": { "enum": ["free", "paid", "freemium"], "description": "Untuk node certification dan material" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "type": { "const": "course" } } },
+            "then": { "required": ["ref_id", "status"] }
+          },
+          {
+            "if": { "properties": { "type": { "enum": ["material", "certification"] } } },
+            "then": { "required": ["ref_id", "cost_type"] }
+          }
+        ]
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "relation"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "type": "string", "pattern": "^N[0-9]+$" },
+          "to": { "type": "string", "pattern": "^N[0-9]+$" },
+          "relation": { "enum": ["prerequisite", "recommended_next"] }
+        }
+      }
+    },
+    "general_tips": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "type": "string", "maxLength": 200 }
+    }
+  },
+  "$comment": "Aturan yang tidak dapat diekspresikan dengan JSON Schema (DAG, tidak ada node yatim, ref_id ada di katalog, status matkul sesuai transkrip) divalidasi oleh backend/app/ai/guardrails/."
+}

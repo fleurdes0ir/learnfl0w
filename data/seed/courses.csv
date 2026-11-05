@@ -1,0 +1,31 @@
+code,name,semester,description,is_mappable
+MK-ALGO,Algoritma Pemrograman,1,"Dasar logika pemrograman, struktur kontrol, struktur data dasar, dan analisis algoritma sederhana.",true
+MK-BD,Basis Data,2,"Perancangan basis data relasional, normalisasi, SQL, dan manajemen transaksi.",true
+MK-ALIN,Aljabar Linier,2,"Vektor, matriks, sistem persamaan linier, dan nilai eigen sebagai fondasi data dan machine learning.",true
+MK-MATDIS,Matematika Diskrit,2,"Logika, himpunan, relasi, graf, dan kombinatorika sebagai dasar komputasi.",true
+MK-OAK,Organisasi dan Arsitektur Komputer,3,"Organisasi komputer, CPU, memori, bahasa rakitan, dan pengantar arsitektur sistem.",true
+MK-DM,Data Mining,3,"Praproses data, klasifikasi, klasterisasi, dan aturan asosiasi.",true
+MK-SO,Sistem Operasi,3,"Proses, thread, penjadwalan, manajemen memori, sistem berkas, dan dasar Linux.",true
+MK-KOMDAT,Komunikasi Data,3,"Transmisi data, media, enkoding, multiplexing, dan deteksi galat.",true
+MK-JARKOM,Jaringan Komputer,3,"Model OSI dan TCP/IP, pengalamatan IP, routing, switching, dan layanan jaringan.",true
+MK-DG,Desain Grafis,4,"Prinsip desain visual, tipografi, warna, komposisi, dan perangkat desain grafis.",true
+MK-RPL,Rekayasa Perangkat Lunak,4,"Siklus hidup perangkat lunak, analisis kebutuhan, perancangan, pengujian, dan metodologi agile.",true
+MK-STAT,Statistika,4,"Statistika deskriptif dan inferensial, probabilitas, distribusi, dan uji hipotesis.",true
+MK-IOT,IoT Concept,4,"Konsep IoT: sensor, aktuator, mikrokontroler, protokol komunikasi, dan platform data.",true
+MK-PBO,Pemrograman Berbasis Objek,4,"Kelas, pewarisan, polimorfisme, enkapsulasi, dan pola desain dasar.",true
+MK-CLOUD,Cloud Computing,5,"Model layanan cloud, virtualisasi, container, dan layanan komputasi awan.",true
+MK-ECOM,E-Commerce,5,"Model bisnis dan sistem e-commerce, pembayaran daring, dan keamanan transaksi.",true
+MK-FINTECH,Financial Technology,5,"Pembayaran digital, layanan perbankan digital, dan inovasi teknologi keuangan.",true
+MK-CYBER,Cyber Security,5,"Ancaman siber, kriptografi, keamanan jaringan dan aplikasi, serta manajemen risiko.",true
+MK-MM,Multimedia,5,"Pengolahan dan produksi citra, audio, video, animasi, dan interaktivitas.",true
+MK-BING1,Bahasa Inggris 1,1,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false
+MK-BING2,Bahasa Inggris 2,3,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false
+MK-BING3,Bahasa Inggris 3,4,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false
+MK-AKUN,Dasar Akuntansi,1,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false
+MK-KWU,Kewirausahaan,1,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false
+MK-BUDAYA,Budaya Perusahaan,1,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false
+MK-PERBSY,Perbankan Syariah,2,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false
+MK-AKBSY,Akuntansi Perbankan Syariah,4,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false
+MK-ALM,Asset Liability Management Syariah,5,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false
+MK-PTIK,Pengantar Teknologi Informasi dan Komunikasi,2,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false
+MK-INOV,Inovasi dan Teknologi Baru,3,Mata kuliah non-TI; tidak dipakai pada pemetaan karir.,false

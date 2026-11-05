@@ -1,0 +1,89 @@
+openapi: 3.1.0
+info:
+  title: IT Career Compass Internal Tools API
+  version: 0.1.0
+  description: |
+    Endpoint internal yang dipanggil oleh flow Langflow (agent `consultant-reply`).
+    **Tidak dipublikasikan** ke frontend. Dilindungi header `X-Internal-Token`. Hanya baca.
+servers:
+  - url: http://backend:8080
+    description: "Jaringan Docker Compose (lokal); di cloud gunakan URL layanan backend"
+security:
+  - internalToken: []
+paths:
+  /internal/tools/certifications/search:
+    post:
+      operationId: toolSearchCertifications
+      summary: Cari sertifikasi dari katalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CatalogSearchRequest' }
+      responses:
+        '200':
+          description: Hasil pencarian (hanya item berstatus active)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/CertificationHit' }
+        '401': { description: Token internal tidak valid }
+  /internal/tools/materials/search:
+    post:
+      operationId: toolSearchMaterials
+      summary: Cari materi belajar dari katalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CatalogSearchRequest' }
+      responses:
+        '200':
+          description: Hasil pencarian (hanya item berstatus active)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/MaterialHit' }
+        '401': { description: Token internal tidak valid }
+components:
+  securitySchemes:
+    internalToken:
+      type: apiKey
+      in: header
+      name: X-Internal-Token
+  schemas:
+    CatalogSearchRequest:
+      type: object
+      required: [career_path_code]
+      properties:
+        career_path_code: { type: string, example: CP-05 }
+        query: { type: string }
+        level: { type: string, enum: [beginner, intermediate, advanced] }
+        cost_type: { type: string, enum: [free, paid, freemium] }
+        language: { type: string, example: id }
+        limit: { type: integer, minimum: 1, maximum: 8, default: 5 }
+    CertificationHit:
+      type: object
+      properties:
+        ref_id: { type: string, example: CERT-001 }
+        name: { type: string }
+        provider: { type: string }
+        level: { type: string }
+        cost_type: { type: string }
+    MaterialHit:
+      type: object
+      properties:
+        ref_id: { type: string, example: MAT-001 }
+        title: { type: string }
+        provider: { type: string }
+        format: { type: string }
+        level: { type: string }
+        cost_type: { type: string }

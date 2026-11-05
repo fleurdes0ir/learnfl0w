@@ -1,0 +1,1066 @@
+openapi: 3.1.0
+info:
+  title: IT Career Compass API
+  version: 0.1.0
+  description: |
+    Kontrak API untuk IT Career Compass (tim LearnFl0w). Dokumen ini adalah sumber kebenaran
+    untuk backend dan frontend (contract-first). Ubah dokumen ini lebih dulu sebelum mengubah kode.
+
+    Konvensi:
+    - Semua endpoint di bawah `/api/v1` memakai `Authorization: Bearer <access_token>` kecuali ditandai publik.
+    - Error memakai format RFC 7807 (`application/problem+json`).
+    - Paginasi: `page` (mulai 1) dan `page_size` (maks 100).
+servers:
+  - url: http://localhost:8080
+    description: Lokal
+tags:
+  - name: Health
+  - name: Auth
+  - name: Profile
+  - name: Chat
+  - name: Roadmap
+  - name: Catalog
+  - name: Feedback
+  - name: Admin
+security:
+  - bearerAuth: []
+
+paths:
+  /healthz:
+    get:
+      tags: [Health]
+      operationId: getHealth
+      summary: Status aplikasi dan database
+      security: []
+      responses:
+        '200':
+          description: Sehat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+        '503':
+          description: Tidak sehat
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+  /healthz/llm:
+    get:
+      tags: [Health]
+      operationId: getLlmHealth
+      summary: Status jalur LLM utama dan fallback
+      security: []
+      responses:
+        '200':
+          description: Status tiap jalur
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LlmHealth' }
+
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      summary: Registrasi akun mahasiswa
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          description: Akun dibuat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: Login dengan email dan password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Berhasil
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/v1/auth/refresh:
+    post:
+      tags: [Auth]
+      operationId: refresh
+      summary: Tukar refresh token (rotasi)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        '200':
+          description: Pasangan token baru; refresh token lama dicabut
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      summary: Cabut refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        '204': { description: Berhasil }
+  /api/v1/me:
+    get:
+      tags: [Auth]
+      operationId: getMe
+      summary: Data akun saat ini
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Auth]
+      operationId: deleteMe
+      summary: Hapus akun dan seluruh datanya
+      responses:
+        '204': { description: Terhapus }
+
+  /api/v1/profile:
+    get:
+      tags: [Profile]
+      operationId: getProfile
+      summary: Profil mahasiswa
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Profile]
+      operationId: putProfile
+      summary: Buat atau ubah profil
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfileInput' }
+      responses:
+        '200':
+          description: Tersimpan
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/v1/courses:
+    get:
+      tags: [Profile]
+      operationId: listCourses
+      summary: Daftar mata kuliah katalog
+      parameters:
+        - { name: mappable_only, in: query, schema: { type: boolean, default: false } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Course' }
+  /api/v1/transcript:
+    get:
+      tags: [Profile]
+      operationId: getTranscript
+      summary: Transkrip pengguna
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TranscriptEntry' }
+    put:
+      tags: [Profile]
+      operationId: putTranscript
+      summary: Ganti seluruh isi transkrip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/TranscriptEntryInput' }
+      responses:
+        '200':
+          description: Tersimpan
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TranscriptEntry' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/v1/transcript/import:
+    post:
+      tags: [Profile]
+      operationId: importTranscriptCsv
+      summary: Impor transkrip dari CSV (kolom nama_matkul,nilai,semester)
+      parameters:
+        - name: dry_run
+          in: query
+          description: Bila true, hanya validasi dan kembalikan pratinjau tanpa menyimpan
+          schema: { type: boolean, default: true }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          description: Hasil validasi atau penyimpanan
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TranscriptImportResult' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /api/v1/sessions:
+    post:
+      tags: [Chat]
+      operationId: createSession
+      summary: Mulai sesi konsultasi baru
+      responses:
+        '201':
+          description: Sesi dibuat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+    get:
+      tags: [Chat]
+      operationId: listSessions
+      summary: Riwayat sesi milik pengguna
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionPage' }
+  /api/v1/sessions/{sessionId}:
+    parameters:
+      - { $ref: '#/components/parameters/SessionId' }
+    get:
+      tags: [Chat]
+      operationId: getSession
+      summary: Detail sesi dan pesan
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Chat]
+      operationId: deleteSession
+      summary: Hapus sesi beserta pesannya
+      responses:
+        '204': { description: Terhapus }
+  /api/v1/sessions/{sessionId}/messages:
+    parameters:
+      - { $ref: '#/components/parameters/SessionId' }
+    post:
+      tags: [Chat]
+      operationId: postMessage
+      summary: Kirim pesan dan terima respons streaming (SSE)
+      description: |
+        Respons bertipe `text/event-stream`. Tipe event:
+
+        | event | data (JSON) |
+        |---|---|
+        | `token` | `{ "text": "..." }` potongan teks asisten |
+        | `tool_status` | `{ "tool": "certification_finder", "state": "started" \| "finished" }` |
+        | `slots` | `{ "slots": {...}, "missing": ["work_style"] }` |
+        | `roadmap_ready` | `{ "roadmap_id": "uuid" }` |
+        | `error` | `Problem` |
+        | `done` | `{}` penutup stream |
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string, minLength: 1, maxLength: 2000 }
+      responses:
+        '200':
+          description: Stream SSE
+          content:
+            text/event-stream:
+              schema: { type: string }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /api/v1/roadmaps:
+    get:
+      tags: [Roadmap]
+      operationId: listRoadmaps
+      summary: Daftar roadmap milik pengguna
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RoadmapPage' }
+  /api/v1/roadmaps/{roadmapId}:
+    parameters:
+      - { $ref: '#/components/parameters/RoadmapId' }
+    get:
+      tags: [Roadmap]
+      operationId: getRoadmap
+      summary: Detail roadmap beserta progres
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RoadmapDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/v1/roadmaps/{roadmapId}/progress:
+    parameters:
+      - { $ref: '#/components/parameters/RoadmapId' }
+    put:
+      tags: [Roadmap]
+      operationId: putRoadmapProgress
+      summary: Tandai node selesai atau belum
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [node_id, completed]
+              properties:
+                node_id: { type: string, pattern: '^N[0-9]+$' }
+                completed: { type: boolean }
+      responses:
+        '204': { description: Tersimpan }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/career-paths:
+    get:
+      tags: [Catalog]
+      operationId: listCareerPaths
+      summary: Daftar jalur karir baku
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CareerPath' }
+  /api/v1/certifications:
+    get:
+      tags: [Catalog]
+      operationId: listCertifications
+      summary: Cari sertifikasi
+      parameters:
+        - { name: career_path, in: query, schema: { type: string, example: CP-05 } }
+        - { name: cost_type, in: query, schema: { $ref: '#/components/schemas/CostType' } }
+        - { name: level, in: query, schema: { $ref: '#/components/schemas/Level' } }
+        - { name: q, in: query, schema: { type: string } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CertificationPage' }
+  /api/v1/materials:
+    get:
+      tags: [Catalog]
+      operationId: listMaterials
+      summary: Cari materi belajar
+      parameters:
+        - { name: career_path, in: query, schema: { type: string, example: CP-01 } }
+        - { name: cost_type, in: query, schema: { $ref: '#/components/schemas/CostType' } }
+        - { name: level, in: query, schema: { $ref: '#/components/schemas/Level' } }
+        - { name: format, in: query, schema: { type: string, enum: [video, article, course, book, lab] } }
+        - { name: language, in: query, schema: { type: string, example: id } }
+        - { name: q, in: query, schema: { type: string } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialPage' }
+
+  /api/v1/events:
+    post:
+      tags: [Feedback]
+      operationId: createEvent
+      summary: Catat event analitik (mis. klik referensi)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventInput' }
+      responses:
+        '202': { description: Diterima }
+  /api/v1/feedback:
+    post:
+      tags: [Feedback]
+      operationId: createFeedback
+      summary: Beri rating dan komentar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeedbackInput' }
+      responses:
+        '201': { description: Tersimpan }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/v1/link-reports:
+    post:
+      tags: [Feedback]
+      operationId: createLinkReport
+      summary: Laporkan tautan rusak
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entity_type, entity_id]
+              properties:
+                entity_type: { type: string, enum: [certification, material] }
+                entity_id: { type: string, format: uuid }
+      responses:
+        '201': { description: Dilaporkan }
+
+  /api/v1/admin/catalog/{type}:
+    parameters:
+      - { $ref: '#/components/parameters/CatalogType' }
+    get:
+      tags: [Admin]
+      operationId: adminListCatalog
+      summary: Daftar item katalog (termasuk nonaktif)
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [active, needs_review, inactive] } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogItemPage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Admin]
+      operationId: adminCreateCatalogItem
+      summary: Tambah item katalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CatalogItemInput' }
+      responses:
+        '201':
+          description: Dibuat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogItem' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/v1/admin/catalog/{type}/{itemId}:
+    parameters:
+      - { $ref: '#/components/parameters/CatalogType' }
+      - { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Admin]
+      operationId: adminUpdateCatalogItem
+      summary: Ubah item katalog (memicu embedding ulang)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CatalogItemInput' }
+      responses:
+        '200':
+          description: Tersimpan
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogItem' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Admin]
+      operationId: adminDeactivateCatalogItem
+      summary: Nonaktifkan item (soft delete)
+      responses:
+        '204': { description: Dinonaktifkan }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/v1/admin/reindex:
+    post:
+      tags: [Admin]
+      operationId: adminReindex
+      summary: Hitung ulang embedding katalog
+      responses:
+        '202': { description: Diterima }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/v1/admin/link-check:
+    post:
+      tags: [Admin]
+      operationId: adminRunLinkCheck
+      summary: Jalankan pemeriksa tautan sekarang
+      responses:
+        '202': { description: Diterima }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/v1/admin/link-reports:
+    get:
+      tags: [Admin]
+      operationId: adminListLinkReports
+      summary: Daftar laporan tautan rusak
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LinkReport' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/v1/admin/analytics/trends:
+    get:
+      tags: [Admin]
+      operationId: adminTrends
+      summary: Tren karir agregat anonim
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: semester, in: query, schema: { type: integer, minimum: 1, maximum: 8 } }
+        - { name: career_path, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TrendReport' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/v1/admin/analytics/ops:
+    get:
+      tags: [Admin]
+      operationId: adminOps
+      summary: Metrik operasional
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OpsReport' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: page_size
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    RoadmapId:
+      name: roadmapId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    CatalogType:
+      name: type
+      in: path
+      required: true
+      schema: { type: string, enum: [courses, career-paths, certifications, materials] }
+
+  responses:
+    Unauthorized:
+      description: Tidak terautentikasi atau kredensial salah
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Peran tidak memiliki akses
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Tidak ditemukan
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: Konflik (mis. email sudah terdaftar)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ValidationError:
+      description: Input tidak valid
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    TooManyRequests:
+      description: Batas permintaan terlampaui
+      headers:
+        Retry-After: { schema: { type: integer } }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+    Problem:
+      type: object
+      description: RFC 7807 problem details
+      required: [type, title, status]
+      properties:
+        type: { type: string, example: 'about:blank' }
+        title: { type: string, example: Validation error }
+        status: { type: integer, example: 422 }
+        detail: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        database: { type: string, enum: [ok, error] }
+        version: { type: string }
+    LlmHealth:
+      type: object
+      properties:
+        active_provider: { type: string, enum: [router, vertex, openai, anthropic] }
+        providers:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              state: { type: string, enum: [ok, error, disabled] }
+              circuit: { type: string, enum: [closed, open, half_open] }
+              latency_ms: { type: integer }
+
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 10, maxLength: 128, writeOnly: true }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, writeOnly: true }
+    TokenPair:
+      type: object
+      required: [access_token, refresh_token, token_type, expires_in]
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        token_type: { type: string, example: bearer }
+        expires_in: { type: integer, example: 1800 }
+    User:
+      type: object
+      required: [id, email, role]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { type: string, enum: [student, admin] }
+        has_profile: { type: boolean }
+
+    ProfileInput:
+      type: object
+      required: [semester, hours_per_week, internship_target, budget_pref, consent]
+      properties:
+        display_name: { type: string, maxLength: 80 }
+        semester: { type: integer, minimum: 1, maximum: 8 }
+        interests: { type: array, items: { type: string, maxLength: 60 }, maxItems: 20 }
+        current_skills: { type: array, items: { type: string, maxLength: 60 }, maxItems: 30 }
+        hours_per_week: { type: integer, minimum: 1, maximum: 80 }
+        internship_target: { type: string, example: Semester 6 }
+        budget_pref: { type: string, enum: [free, paid_ok] }
+        consent: { type: boolean, description: Harus true untuk menyimpan }
+    Profile:
+      allOf:
+        - $ref: '#/components/schemas/ProfileInput'
+        - type: object
+          properties:
+            work_style: { type: string, nullable: true }
+            consent_at: { type: string, format: date-time }
+    Course:
+      type: object
+      required: [id, code, name, semester, is_mappable]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, example: MK-SO }
+        name: { type: string, example: Sistem Operasi }
+        semester: { type: integer, minimum: 1, maximum: 8 }
+        description: { type: string }
+        is_mappable: { type: boolean }
+    Grade:
+      type: string
+      enum: [A, AB, B, BC, C, D, E]
+    TranscriptEntryInput:
+      type: object
+      required: [course_id, grade_letter]
+      properties:
+        course_id: { type: string, format: uuid }
+        grade_letter: { $ref: '#/components/schemas/Grade' }
+        semester_taken: { type: integer, minimum: 1, maximum: 8 }
+    TranscriptEntry:
+      allOf:
+        - $ref: '#/components/schemas/TranscriptEntryInput'
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            course_name: { type: string }
+            source: { type: string, enum: [manual, csv] }
+    TranscriptImportResult:
+      type: object
+      properties:
+        dry_run: { type: boolean }
+        valid:
+          type: array
+          items: { $ref: '#/components/schemas/TranscriptEntryInput' }
+        invalid:
+          type: array
+          items:
+            type: object
+            properties:
+              line: { type: integer }
+              raw: { type: string }
+              reason: { type: string }
+              suggestions:
+                type: array
+                items: { type: string }
+        saved_count: { type: integer }
+
+    Session:
+      type: object
+      required: [id, status, started_at]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [active, completed, abandoned] }
+        slots: { type: object, additionalProperties: true }
+        started_at: { type: string, format: date-time }
+        ended_at: { type: string, format: date-time, nullable: true }
+    Message:
+      type: object
+      required: [id, role, content, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string }
+        created_at: { type: string, format: date-time }
+    SessionDetail:
+      allOf:
+        - $ref: '#/components/schemas/Session'
+        - type: object
+          properties:
+            messages:
+              type: array
+              items: { $ref: '#/components/schemas/Message' }
+            roadmap_id: { type: string, format: uuid, nullable: true }
+    SessionPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/Session' }
+
+    Roadmap:
+      $ref: './roadmap.schema.json'
+    RoadmapSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        career_path_code: { type: string }
+        version: { type: integer }
+        source: { type: string, enum: [ai, template] }
+        created_at: { type: string, format: date-time }
+    RoadmapDetail:
+      type: object
+      required: [id, version, source, content]
+      properties:
+        id: { type: string, format: uuid }
+        version: { type: integer }
+        source: { type: string, enum: [ai, template] }
+        content: { $ref: '#/components/schemas/Roadmap' }
+        completed_node_ids:
+          type: array
+          items: { type: string }
+        created_at: { type: string, format: date-time }
+    RoadmapPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/RoadmapSummary' }
+
+    CostType:
+      type: string
+      enum: [free, paid, freemium]
+    Level:
+      type: string
+      enum: [beginner, intermediate, advanced]
+    CareerPath:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, example: CP-05 }
+        name: { type: string, example: Cloud & DevOps Engineer }
+        description: { type: string }
+    Certification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, example: CERT-001 }
+        name: { type: string }
+        provider: { type: string }
+        level: { $ref: '#/components/schemas/Level' }
+        cost_type: { $ref: '#/components/schemas/CostType' }
+        url: { type: string, format: uri }
+        language: { type: string }
+        description: { type: string }
+        last_verified_at: { type: string, format: date }
+    Material:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, example: MAT-001 }
+        title: { type: string }
+        provider: { type: string }
+        format: { type: string, enum: [video, article, course, book, lab] }
+        level: { $ref: '#/components/schemas/Level' }
+        cost_type: { $ref: '#/components/schemas/CostType' }
+        language: { type: string }
+        duration_minutes: { type: integer, nullable: true }
+        url: { type: string, format: uri }
+        last_verified_at: { type: string, format: date }
+    CertificationPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/Certification' }
+    MaterialPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/Material' }
+    CatalogItemInput:
+      type: object
+      description: Bentuk bergantung pada `type` di path; lihat docs/architecture/data-model.md
+      additionalProperties: true
+    CatalogItem:
+      type: object
+      additionalProperties: true
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        status: { type: string, enum: [active, needs_review, inactive] }
+    CatalogItemPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/CatalogItem' }
+
+    EventInput:
+      type: object
+      required: [event_type]
+      properties:
+        event_type:
+          type: string
+          enum: [reference_click, roadmap_view, session_start, session_complete]
+        payload:
+          type: object
+          description: Tanpa isi percakapan dan data pribadi
+          additionalProperties: true
+    FeedbackInput:
+      type: object
+      required: [target_type, target_id, rating]
+      properties:
+        target_type: { type: string, enum: [session, roadmap] }
+        target_id: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, maxLength: 1000 }
+    LinkReport:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        entity_type: { type: string }
+        entity_id: { type: string, format: uuid }
+        entity_name: { type: string }
+        status: { type: string, enum: [open, resolved] }
+        created_at: { type: string, format: date-time }
+
+    TrendReport:
+      type: object
+      description: Seluruh segmen dengan kurang dari 5 pengguna disembunyikan
+      properties:
+        top_career_paths:
+          type: array
+          items:
+            type: object
+            properties:
+              career_path_code: { type: string }
+              sessions: { type: integer }
+        weekly_trend:
+          type: array
+          items:
+            type: object
+            properties:
+              week: { type: string, format: date }
+              career_path_code: { type: string }
+              sessions: { type: integer }
+        semester_distribution:
+          type: array
+          items:
+            type: object
+            properties:
+              semester: { type: integer }
+              users: { type: integer }
+        top_courses_in_roadmaps:
+          type: array
+          items:
+            type: object
+            properties:
+              course_code: { type: string }
+              count: { type: integer }
+        top_clicked_references:
+          type: array
+          items:
+            type: object
+            properties:
+              entity_type: { type: string }
+              code: { type: string }
+              clicks: { type: integer }
+        funnel:
+          type: object
+          properties:
+            login: { type: integer }
+            session_started: { type: integer }
+            session_completed: { type: integer }
+            roadmap_viewed: { type: integer }
+            reference_clicked: { type: integer }
+        satisfaction:
+          type: object
+          properties:
+            average_rating: { type: number }
+            count: { type: integer }
+    OpsReport:
+      type: object
+      properties:
+        latency_ms:
+          type: object
+          properties:
+            chat_first_token_p95: { type: integer }
+            chat_turn_p95: { type: integer }
+            roadmap_p95: { type: integer }
+        llm:
+          type: object
+          properties:
+            error_rate: { type: number }
+            fallback_rate: { type: number }
+            template_roadmap_rate: { type: number }
+            schema_valid_rate: { type: number }
+        usage:
+          type: object
+          properties:
+            tokens_in: { type: integer }
+            tokens_out: { type: integer }
+            estimated_cost_usd: { type: number }
+        links:
+          type: object
+          properties:
+            active: { type: integer }
+            needs_review: { type: integer }
+            inactive: { type: integer }
+
+    PageMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        page_size: { type: integer }
+        total: { type: integer }

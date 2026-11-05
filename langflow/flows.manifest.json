@@ -1,0 +1,11 @@
+{
+  "$comment": "Daftar flow yang diharapkan. status: planned (belum diekspor) atau exported (file ada di flows/). Setiap flow punya varian router dan vertex. Kontrak input/output: docs/api/langflow-flows.md",
+  "naming": "<flow>__<variant>.json, variant = router | vertex",
+  "variants": ["router", "vertex"],
+  "flows": [
+    { "name": "slot-extractor",   "mode": "non-stream", "spec": "SPEC-005", "status": "planned" },
+    { "name": "consultant-reply", "mode": "stream",     "spec": "SPEC-005", "status": "planned" },
+    { "name": "path-advisor",     "mode": "non-stream", "spec": "SPEC-006", "status": "planned" },
+    { "name": "roadmap-builder",  "mode": "non-stream", "spec": "SPEC-006", "status": "planned" }
+  ]
+}
