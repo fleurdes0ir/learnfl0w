@@ -1,7 +1,7 @@
 """Auth service layer."""
 
 import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,9 +16,7 @@ class AuthService:
         self.session = session
         self.settings = get_settings()
 
-    async def register(
-        self, email: str, password: str
-    ) -> tuple[User, str, str]:
+    async def register(self, email: str, password: str) -> tuple[User, str, str]:
         """Register new user and return (user, access_token, refresh_token)."""
         from datetime import timedelta
 
@@ -52,7 +50,7 @@ class AuthService:
         rt = RefreshToken(
             user_id=user.id,
             token_hash=token_hash,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=self.settings.refresh_ttl_days),
+            expires_at=datetime.now(UTC) + timedelta(days=self.settings.refresh_ttl_days),
         )
         self.session.add(rt)
         await self.session.commit()
@@ -77,7 +75,7 @@ class AuthService:
         rt = RefreshToken(
             user_id=user.id,
             token_hash=token_hash,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=self.settings.refresh_ttl_days),
+            expires_at=datetime.now(UTC) + timedelta(days=self.settings.refresh_ttl_days),
         )
         self.session.add(rt)
         await self.session.commit()
@@ -96,11 +94,11 @@ class AuthService:
         )
         rt = result.scalar_one_or_none()
 
-        if not rt or rt.revoked_at or rt.expires_at < datetime.now(timezone.utc):
+        if not rt or rt.revoked_at or rt.expires_at < datetime.now(UTC):
             raise ValueError("Invalid or expired refresh token")
 
         # Revoke old token
-        rt.revoked_at = datetime.now(timezone.utc)
+        rt.revoked_at = datetime.now(UTC)
 
         # Check for reuse (security: revoke all user tokens)
         result = await self.session.execute(
@@ -114,7 +112,7 @@ class AuthService:
             await self.session.execute(
                 update(RefreshToken)
                 .where(RefreshToken.user_id == rt.user_id)
-                .values(revoked_at=datetime.now(timezone.utc))
+                .values(revoked_at=datetime.now(UTC))
             )
             await self.session.commit()
             raise ValueError("Token reuse detected. All sessions revoked.")
@@ -132,7 +130,7 @@ class AuthService:
         new_rt = RefreshToken(
             user_id=user.id,
             token_hash=new_token_hash,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=self.settings.refresh_ttl_days),
+            expires_at=datetime.now(UTC) + timedelta(days=self.settings.refresh_ttl_days),
         )
         self.session.add(new_rt)
         await self.session.commit()
@@ -145,7 +143,7 @@ class AuthService:
         await self.session.execute(
             update(RefreshToken)
             .where(RefreshToken.token_hash == token_hash)
-            .values(revoked_at=datetime.now(timezone.utc))
+            .values(revoked_at=datetime.now(UTC))
         )
         await self.session.commit()
 

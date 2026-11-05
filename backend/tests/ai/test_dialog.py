@@ -31,7 +31,9 @@ def test_missing_slots_reports_in_required_order() -> None:
 
 
 def test_collecting_asks_first_missing_slot() -> None:
-    stage, action = next_step(Stage.COLLECTING, {"interests": ["a"]}, Intent.PROVIDE_INFO, None, VALID)
+    stage, action = next_step(
+        Stage.COLLECTING, {"interests": ["a"]}, Intent.PROVIDE_INFO, None, VALID
+    )
     assert stage is Stage.COLLECTING
     assert action.kind is ActionKind.ASK_SLOT and action.slot == "current_skills"
 
@@ -70,7 +72,10 @@ def test_invalid_or_missing_path_keeps_offering_paths() -> None:
 
 
 def test_off_topic_and_questions_do_not_change_stage() -> None:
-    for intent, kind in ((Intent.OFF_TOPIC, ActionKind.REDIRECT), (Intent.ASK_QUESTION, ActionKind.ANSWER_QUESTION)):
+    for intent, kind in (
+        (Intent.OFF_TOPIC, ActionKind.REDIRECT),
+        (Intent.ASK_QUESTION, ActionKind.ANSWER_QUESTION),
+    ):
         stage, action = next_step(Stage.COLLECTING, {}, intent, None, VALID)
         assert stage is Stage.COLLECTING and action.kind is kind
 

@@ -21,14 +21,14 @@ async def get_current_user(
     """Extract and validate user from JWT token."""
     token = credentials.credentials
     payload = verify_token(token, token_type="access")
-    
+
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(
@@ -36,22 +36,23 @@ async def get_current_user(
             detail="Invalid token payload",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     result = await session.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-    
+
     if user is None or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or inactive",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return user
 
 
 async def require_role(role: str):
     """Dependency factory to require specific role."""
+
     async def _require_role(user: Annotated[User, Depends(get_current_user)]) -> User:
         if user.role != role and user.role != "admin":
             raise HTTPException(
@@ -59,6 +60,7 @@ async def require_role(role: str):
                 detail=f"Role '{role}' required",
             )
         return user
+
     return _require_role
 
 

@@ -30,7 +30,7 @@ async def register(
     try:
         user, access_token, refresh_token = await service.register(data.email, data.password)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from None
 
     return TokenResponse(
         access_token=access_token,
@@ -49,7 +49,7 @@ async def login(
     try:
         user, access_token, refresh_token = await service.login(data.email, data.password)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from None
 
     return TokenResponse(
         access_token=access_token,
@@ -68,7 +68,7 @@ async def refresh(
     try:
         access_token, new_refresh_token = await service.refresh(data.refresh_token)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from None
 
     return RefreshResponse(access_token=access_token, refresh_token=new_refresh_token)
 

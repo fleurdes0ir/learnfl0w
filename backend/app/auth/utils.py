@@ -2,7 +2,7 @@
 
 import hashlib
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from argon2 import PasswordHasher
@@ -36,8 +36,8 @@ def create_access_token(user_id: str, role: str, expires_in_minutes: int | None 
     payload = {
         "sub": user_id,
         "role": role,
-        "iat": datetime.now(timezone.utc),
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=expires_in_minutes),
+        "iat": datetime.now(UTC),
+        "exp": datetime.now(UTC) + timedelta(minutes=expires_in_minutes),
         "type": "access",
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
@@ -51,8 +51,8 @@ def create_refresh_token(user_id: str) -> tuple[str, str]:
         {
             "sub": user_id,
             "jti": str(uuid.uuid4()),
-            "iat": datetime.now(timezone.utc),
-            "exp": datetime.now(timezone.utc) + timedelta(days=settings.refresh_ttl_days),
+            "iat": datetime.now(UTC),
+            "exp": datetime.now(UTC) + timedelta(days=settings.refresh_ttl_days),
             "type": "refresh",
         },
         settings.jwt_secret,
