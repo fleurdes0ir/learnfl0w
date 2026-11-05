@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://learnfl0w:learnfl0w@localhost:5432/learnfl0w"
 
     # Auth
-    jwt_secret: str = "change-me-change-me-change-me-change-me"
+    jwt_secret: str = "change-me-change-me-change-me-change-me"  # noqa: S105
     jwt_access_ttl_minutes: int = 30
     refresh_ttl_days: int = 7
     admin_emails: str = ""

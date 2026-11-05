@@ -110,7 +110,9 @@ class LangflowClient:
         except KeyError as exc:
             raise FlowOutputError(f"flow not found in Langflow: {name}") from exc
 
-    def _body(self, input_value: str, session_id: str, tweaks: dict[str, Any] | None) -> dict[str, Any]:
+    def _body(
+        self, input_value: str, session_id: str, tweaks: dict[str, Any] | None
+    ) -> dict[str, Any]:
         body: dict[str, Any] = {
             "input_value": input_value,
             "input_type": "chat",
@@ -127,7 +129,7 @@ class LangflowClient:
         input_value: str,
         session_id: str,
         *,
-        timeout: float | None = None,
+        timeout: float | None = None,  # noqa: ASYNC109
         tweaks: dict[str, Any] | None = None,
     ) -> RunResult:
         """Run a non-stream flow, falling back to the other variant when needed."""
