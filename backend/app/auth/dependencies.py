@@ -20,7 +20,7 @@ async def get_current_user(
 ) -> User:
     """Extract and validate user from JWT token."""
     token = credentials.credentials
-    payload = verify_token(token, token_type="access")
+    payload = verify_token(token, token_type="access")  # noqa: S106
 
     if payload is None:
         raise HTTPException(

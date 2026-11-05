@@ -129,7 +129,7 @@ class LangflowClient:
         input_value: str,
         session_id: str,
         *,
-        timeout: float | None = None,
+        timeout: float | None = None,  # noqa: ASYNC109
         tweaks: dict[str, Any] | None = None,
     ) -> RunResult:
         """Run a non-stream flow, falling back to the other variant when needed."""
