@@ -7,15 +7,13 @@ import asyncio
 import csv
 import json
 import uuid
-from datetime import UTC, datetime
 from pathlib import Path
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import get_settings
-from app.db.base import Base
 from app.models.catalog import CareerPath, Course, CourseCareerpathMap
 
 
