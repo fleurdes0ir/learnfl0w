@@ -1,6 +1,7 @@
 """Load catalog seed data from data/seed into database (idempoten).
 
-Upsert: jika `code` ada, skip; jika baru, insert. Mencegah duplikasi saat `make seed` dijalankan berulang.
+Upsert: jika `code` ada, skip; jika baru, insert.
+Mencegah duplikasi saat `make seed` dijalankan berulang.
 """
 
 import asyncio
