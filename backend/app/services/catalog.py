@@ -6,7 +6,7 @@ from typing import Any
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.catalog import CareerPath, Certification, Course, LearningMaterial
+from app.models.catalog import CareerPath, Certification, LearningMaterial
 from app.schemas.catalog import (
     CertificationInput,
     MaterialInput,
