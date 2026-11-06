@@ -56,9 +56,7 @@ def upgrade() -> None:
     op.create_index("ix_messages_conversation_id", "messages", ["conversation_id"])
 
     # add FK to ai_runs (conversation_id already exists from 0003)
-    op.execute(
-        "ALTER TABLE ai_runs DROP CONSTRAINT IF EXISTS ai_runs_conversation_id_fkey"
-    )
+    op.execute("ALTER TABLE ai_runs DROP CONSTRAINT IF EXISTS ai_runs_conversation_id_fkey")
     op.create_foreign_key(
         "fk_ai_runs_conversation_id",
         "ai_runs",

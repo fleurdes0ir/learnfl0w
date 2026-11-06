@@ -37,8 +37,7 @@ class Conversation(Base):
 
     def __repr__(self) -> str:
         return (
-            f"<Conversation {self.id} user={self.user_id} state={self.state} "
-            f"status={self.status}>"
+            f"<Conversation {self.id} user={self.user_id} state={self.state} status={self.status}>"
         )
 
 

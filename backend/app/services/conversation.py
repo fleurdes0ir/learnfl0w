@@ -109,9 +109,7 @@ class ConversationService:
 
         return assistant_msg
 
-    def _generate_response(
-        self, action: Action, slots: dict, missing: list[str]
-    ) -> str:
+    def _generate_response(self, action: Action, slots: dict, missing: list[str]) -> str:
         """Generate deterministic response text based on action."""
         if action.kind == ActionKind.ASK_SLOT:
             slot = action.slot
