@@ -3,7 +3,7 @@
 from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import RequireAdmin
@@ -17,6 +17,7 @@ from app.schemas.catalog import (
     MaterialResponse,
 )
 from app.services.catalog import CatalogService
+from app.services.link_checker import LinkChecker
 
 router = APIRouter()
 
@@ -220,3 +221,18 @@ async def admin_deactivate_catalog_item(
     success = await service.admin_deactivate(item_type, item_id)
     if not success:
         raise HTTPException(status_code=404, detail="Item not found")
+
+
+@router.post("/admin/link-check", dependencies=[Depends(RequireAdmin)])
+async def admin_run_link_check(
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_session),
+) -> dict[str, str]:
+    """Admin: run link checker job (async background task)."""
+
+    async def run_checker() -> None:
+        checker = LinkChecker(db, timeout=10.0, max_concurrent=5, verify_days=90)
+        await checker.run()
+
+    background_tasks.add_task(run_checker)
+    return {"status": "accepted", "message": "Link check started in background"}
