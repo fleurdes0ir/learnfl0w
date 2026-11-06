@@ -20,7 +20,9 @@ MAX_SESSIONS_PER_DAY = 5
 
 
 class ConversationService:
-    def __init__(self, db: AsyncSession, langflow: LangflowClient, user_id: uuid.UUID) -> None:
+    def __init__(
+        self, db: AsyncSession, langflow: LangflowClient | None, user_id: uuid.UUID
+    ) -> None:
         self._db = db
         self._langflow = langflow
         self._user_id = user_id
@@ -109,10 +111,12 @@ class ConversationService:
 
         return assistant_msg
 
-    def _generate_response(self, action: Action, slots: dict, missing: list[str]) -> str:
+    def _generate_response(
+        self, action: Action, slots: dict[str, object], missing: list[str]
+    ) -> str:
         """Generate deterministic response text based on action."""
         if action.kind == ActionKind.ASK_SLOT:
-            slot = action.slot
+            slot = action.slot or ""
             prompts = {
                 "interests": "Apa bidang IT yang paling menarik bagi kamu?",
                 "current_skills": "Skill apa saja yang sudah kamu miliki?",

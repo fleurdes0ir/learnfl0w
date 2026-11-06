@@ -34,8 +34,8 @@ async def certification_finder(
     career_path: str | None = Query(None),
     level: str | None = Query(None),
     limit: int = Query(5, ge=1, le=20),
-    session: Annotated[AsyncSession, Depends(get_session)] = None,
-    _: Annotated[None, Depends(_verify_internal_token)] = None,
+    session: AsyncSession = Depends(get_session),
+    _: None = Depends(_verify_internal_token),
 ) -> list[CertificationResponse]:
     """Find certifications by name or filter. Used by consultant-reply flow."""
     stmt = select(Certification).where(Certification.status == "active")
@@ -65,8 +65,8 @@ async def material_finder(
     format: str | None = Query(None),
     language: str | None = Query(None),
     limit: int = Query(5, ge=1, le=20),
-    session: Annotated[AsyncSession, Depends(get_session)] = None,
-    _: Annotated[None, Depends(_verify_internal_token)] = None,
+    session: AsyncSession = Depends(get_session),
+    _: None = Depends(_verify_internal_token),
 ) -> list[MaterialResponse]:
     """Find learning materials by title or filter. Used by consultant-reply flow."""
     stmt = select(LearningMaterial).where(LearningMaterial.status == "active")

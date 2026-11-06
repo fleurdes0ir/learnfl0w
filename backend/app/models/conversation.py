@@ -23,7 +23,7 @@ class Conversation(Base):
     state: Mapped[str] = mapped_column(
         String(30), nullable=False, default="collecting"
     )  # collecting, summarizing, choosing_path, generating, done
-    slots: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    slots: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
     started_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC), nullable=False)
     ended_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
@@ -50,7 +50,7 @@ class Message(Base):
     )
     role: Mapped[str] = mapped_column(String(20), nullable=False)  # user, assistant, tool, system
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    tool_calls: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    tool_calls: Mapped[dict[str, object] | None] = mapped_column(JSONB, nullable=True)
     tokens_in: Mapped[int | None] = mapped_column(Integer, nullable=True)
     tokens_out: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC), nullable=False)

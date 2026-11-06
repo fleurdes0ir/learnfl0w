@@ -20,7 +20,7 @@ class MessageResponse(BaseModel):
     id: UUID
     role: Literal["user", "assistant", "tool", "system"]
     content: str
-    tool_calls: dict | None = None
+    tool_calls: dict[str, object] | None = None
     created_at: datetime
 
     class Config:
@@ -31,7 +31,7 @@ class ConversationResponse(BaseModel):
     id: UUID
     status: Literal["active", "completed", "abandoned"]
     state: Literal["collecting", "summarizing", "choosing_path", "generating", "done"]
-    slots: dict
+    slots: dict[str, object]
     started_at: datetime
     ended_at: datetime | None = None
     message_count: int = 0
@@ -47,12 +47,12 @@ class ConversationDetail(ConversationResponse):
 # SSE event types
 class StreamEvent(BaseModel):
     type: Literal["token", "tool_status", "slots", "error", "done"]
-    data: dict | str | None = None
+    data: dict[str, object] | str | None = None
 
 
 # Internal: slot extractor output
 class SlotExtractorOutput(BaseModel):
-    slots_update: dict = Field(default_factory=dict)
+    slots_update: dict[str, object] = Field(default_factory=dict)
     intent: Literal[
         "provide_info",
         "confirm_summary",
