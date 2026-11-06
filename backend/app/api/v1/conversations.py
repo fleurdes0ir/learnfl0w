@@ -140,11 +140,11 @@ async def post_message_stream(
         try:
             async for event_data in service.post_message_stream(conv, msg.content):
                 yield f"data: {event_data}\n\n"
-        await session.commit()
-    except ValueError as e:
-        yield f"data: {{'error': '{str(e)}'}}\n\n"
-    except Exception:
-        yield "data: {'error': 'Internal error'}\n\n"
+            await session.commit()
+        except ValueError as e:
+            yield f"data: {{'error': '{str(e)}'}}\n\n"
+        except Exception:
+            yield "data: {'error': 'Internal error'}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
