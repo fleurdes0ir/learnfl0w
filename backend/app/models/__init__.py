@@ -8,6 +8,7 @@ from app.models.catalog import (
     CourseCareerpathMap,
     LearningMaterial,
 )
+from app.models.conversation import Conversation, Message
 from app.models.user import RefreshToken, User
 
 __all__ = [
@@ -19,4 +20,6 @@ __all__ = [
     "CourseCareerpathMap",
     "Certification",
     "LearningMaterial",
+    "Conversation",
+    "Message",
 ]
