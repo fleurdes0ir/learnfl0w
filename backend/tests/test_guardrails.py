@@ -1,7 +1,5 @@
 """Tests for input guardrails."""
 
-import pytest
-
 from app.ai.guardrails import detect_prompt_injection, filter_urls
 
 

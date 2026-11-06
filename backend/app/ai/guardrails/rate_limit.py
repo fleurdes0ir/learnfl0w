@@ -17,8 +17,10 @@ async def check_daily_sessions(
     stmt = select(func.count()).where(
         and_(
             Conversation.user_id == user_id,
-            Conversation.started_at >= datetime.combine(today, datetime.min.time()).replace(tzinfo=UTC),
-            Conversation.started_at < datetime.combine(tomorrow, datetime.min.time()).replace(tzinfo=UTC),
+            Conversation.started_at
+            >= datetime.combine(today, datetime.min.time()).replace(tzinfo=UTC),
+            Conversation.started_at
+            < datetime.combine(tomorrow, datetime.min.time()).replace(tzinfo=UTC),
         )
     )
     count = (await session.execute(stmt)).scalar() or 0
