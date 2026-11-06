@@ -59,7 +59,10 @@ class LinkChecker:
             self.marked_review += 1
         elif (
             cert.last_verified_at is None
-            or (today - cert.last_verified_at).days > self.verify_days
+            or (  # noqa: E501
+                today - cert.last_verified_at
+            ).days
+            > self.verify_days
         ):
             cert.status = "needs_review"
             self.marked_review += 1
@@ -79,7 +82,10 @@ class LinkChecker:
             self.marked_review += 1
         elif (
             material.last_verified_at is None
-            or (today - material.last_verified_at).days > self.verify_days
+            or (  # noqa: E501
+                today - material.last_verified_at
+            ).days
+            > self.verify_days
         ):
             material.status = "needs_review"
             self.marked_review += 1
