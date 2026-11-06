@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
@@ -12,8 +13,6 @@ from app.ai.dialog.state import Action, ActionKind, Intent, Stage, missing_slots
 from app.models.conversation import Conversation, Message
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from app.ai.langflow.client import LangflowClient
 
 MAX_TURNS_PER_SESSION = 25
@@ -148,3 +147,36 @@ class ConversationService:
         conv.status = "completed"
         conv.ended_at = func.now()
         await self._db.flush()
+
+    async def post_message_stream(self, conv: Conversation, content: str) -> AsyncIterator[str]:
+        """Stream response events (token, slots, etc). Yield JSON-encoded events."""
+        import json
+
+        if conv.status != "active":
+            raise ValueError("Conversation is not active")
+        if conv.state == "done":
+            raise ValueError("Conversation already completed")
+
+        # Validate input length
+        if len(content) > 4000:
+            raise ValueError("Message too long")
+
+        # Count turns
+        stmt = select(func.count()).where(
+            Message.conversation_id == conv.id, Message.role == "user"
+        )
+        turns = (await self._db.execute(stmt)).scalar() or 0
+        if turns >= MAX_TURNS_PER_SESSION:
+            raise ValueError("Maximum turns reached for this session")
+
+        # Save user message
+        user_msg = Message(conversation_id=conv.id, role="user", content=content)
+        self._db.add(user_msg)
+        await self._db.flush()
+
+        # TODO: Call Langflow slot-extractor with streaming
+        # For now, mock streaming responses
+        yield json.dumps({"type": "token", "data": "Terima"})
+        yield json.dumps({"type": "token", "data": " kasih"})
+        yield json.dumps({"type": "slots", "data": {"interests": ["AI"]}})
+        yield json.dumps({"type": "done", "data": None})

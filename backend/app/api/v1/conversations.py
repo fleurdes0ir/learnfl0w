@@ -1,9 +1,10 @@
 """Conversation endpoints (SPEC-005)."""
 
-from typing import Annotated
+from typing import Annotated, AsyncIterator
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import CurrentUser
@@ -119,6 +120,32 @@ async def post_message(
         )
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
+
+
+@router.post("/{conversation_id}/messages/stream")
+async def post_message_stream(
+    conversation_id: UUID,
+    msg: MessageCreate,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user: CurrentUser,
+) -> StreamingResponse:
+    """Post a message with SSE streaming response."""
+    service = ConversationService(session, None, user.id)
+    conv = await service.get_session(conversation_id)
+    if not conv:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Conversation not found")
+
+    async def event_generator() -> AsyncIterator[str]:
+        try:
+            async for event_data in service.post_message_stream(conv, msg.content):
+                yield f"data: {event_data}\n\n"
+            await session.commit()
+        except ValueError as e:
+            yield f"event: error\ndata: {{'error': '{str(e)}'}}\n\n"
+        except Exception:
+            yield f"event: error\ndata: {{'error': 'Internal error'}}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @router.delete("/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
