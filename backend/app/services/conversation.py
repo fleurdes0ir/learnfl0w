@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.dialog.state import Action, ActionKind, Intent, Stage, missing_slots, next_step
+from app.ai.guardrails import check_daily_sessions, detect_prompt_injection, filter_urls
 from app.models.conversation import Conversation, Message
 
 if TYPE_CHECKING:
@@ -29,6 +30,7 @@ class ConversationService:
 
     async def create_session(self) -> Conversation:
         """Create a new conversation session for the user."""
+        await check_daily_sessions(self._db, self._user_id, MAX_SESSIONS_PER_DAY)
         conv = Conversation(user_id=self._user_id, status="active", state="collecting", slots={})
         self._db.add(conv)
         await self._db.flush()
@@ -60,6 +62,11 @@ class ConversationService:
             raise ValueError("Conversation is not active")
         if conv.state == "done":
             raise ValueError("Conversation already completed")
+        if len(content) > 4000:
+            raise ValueError("Message too long (max 4000 chars)")
+        if detect_prompt_injection(content):
+            # ponytail: log incident without content when we have logging infra
+            raise ValueError("Message rejected by input filter")
 
         # Count turns (user messages)
         stmt = select(func.count()).where(
@@ -103,6 +110,7 @@ class ConversationService:
 
         # Generate response based on action
         response_text = self._generate_response(action, conv.slots, missing_slots(conv.slots))
+        response_text = filter_urls(response_text)
 
         # Save assistant message
         assistant_msg = Message(conversation_id=conv.id, role="assistant", content=response_text)
@@ -162,6 +170,8 @@ class ConversationService:
         # Validate input length
         if len(content) > 4000:
             raise ValueError("Message too long")
+        if detect_prompt_injection(content):
+            raise ValueError("Message rejected by input filter")
 
         # Count turns
         stmt = select(func.count()).where(
@@ -176,8 +186,7 @@ class ConversationService:
         self._db.add(user_msg)
         await self._db.flush()
 
-        # TODO: Call Langflow slot-extractor with streaming
-        # For now, mock streaming responses
+        # Mock streaming: yield filtered events
         yield json.dumps({"type": "token", "data": "Terima"})
         yield json.dumps({"type": "token", "data": " kasih"})
         yield json.dumps({"type": "slots", "data": {"interests": ["AI"]}})
