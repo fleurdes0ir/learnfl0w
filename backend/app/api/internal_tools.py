@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.db.session import get_session
 from app.models.catalog import Certification, LearningMaterial
-from app.schemas.catalog import CertificationResponse, LearningMaterialResponse
+from app.schemas.catalog import CertificationResponse, MaterialResponse
 
 router = APIRouter(prefix="/internal/tools", tags=["internal"])
 
@@ -59,7 +59,7 @@ async def certification_finder(
     return [CertificationResponse.model_validate(c) for c in certs]
 
 
-@router.get("/materials", response_model=list[LearningMaterialResponse])
+@router.get("/materials", response_model=list[MaterialResponse])
 async def material_finder(
     q: str = Query("", min_length=0, max_length=200),
     format: str | None = Query(None),
@@ -67,7 +67,7 @@ async def material_finder(
     limit: int = Query(5, ge=1, le=20),
     session: Annotated[AsyncSession, Depends(get_session)] = None,
     _: Annotated[None, Depends(_verify_internal_token)] = None,
-) -> list[LearningMaterialResponse]:
+) -> list[MaterialResponse]:
     """Find learning materials by title or filter. Used by consultant-reply flow."""
     stmt = select(LearningMaterial).where(LearningMaterial.status == "active")
 
@@ -81,4 +81,4 @@ async def material_finder(
     stmt = stmt.limit(limit)
     result = await session.execute(stmt)
     materials = result.scalars().all()
-    return [LearningMaterialResponse.model_validate(m) for m in materials]
+    return [MaterialResponse.model_validate(m) for m in materials]
