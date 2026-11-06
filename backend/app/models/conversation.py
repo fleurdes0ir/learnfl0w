@@ -29,11 +29,17 @@ class Conversation(Base):
 
     # Relationships
     messages: Mapped[list["Message"]] = relationship(
-        "Message", back_populates="conversation", cascade="all, delete-orphan", order_by="Message.created_at"
+        "Message",
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+        order_by="Message.created_at",
     )
 
     def __repr__(self) -> str:
-        return f"<Conversation {self.id} user={self.user_id} state={self.state} status={self.status}>"
+        return (
+            f"<Conversation {self.id} user={self.user_id} state={self.state} "
+            f"status={self.status}>"
+        )
 
 
 class Message(Base):
