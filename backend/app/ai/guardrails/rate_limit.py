@@ -8,9 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.conversation import Conversation
 
 
-async def check_daily_sessions(
-    session: AsyncSession, user_id, max_per_day: int = 5
-) -> None:
+async def check_daily_sessions(session: AsyncSession, user_id, max_per_day: int = 5) -> None:
     """Raise ValueError if user exceeded daily session limit."""
     today = datetime.now(UTC).date()
     tomorrow = today + timedelta(days=1)
