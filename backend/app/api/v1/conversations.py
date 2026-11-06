@@ -83,7 +83,7 @@ async def list_sessions(
 
 
 @router.get("/{conversation_id}", response_model=ConversationDetail)
-async def get_session(
+async def get_conversation(
     conversation_id: UUID,
     session: Annotated[AsyncSession, Depends(get_session)],
     user: CurrentUser,
