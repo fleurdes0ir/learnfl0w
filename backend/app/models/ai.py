@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, Integer, String
+from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -16,8 +16,9 @@ class AiRun(Base):
     __tablename__ = "ai_runs"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    # ponytail: FK added in SPEC-005 when conversations table exists
-    conversation_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    conversation_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("conversations.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     flow_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     variant: Mapped[str] = mapped_column(String(20), nullable=False)  # router, vertex
     status: Mapped[str] = mapped_column(String(20), nullable=False)  # success, failure
